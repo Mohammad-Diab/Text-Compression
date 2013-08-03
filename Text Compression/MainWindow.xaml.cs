@@ -1,22 +1,21 @@
-﻿using Microsoft.Win32;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Runtime.Serialization.Formatters.Binary;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Documents;
+using System.Windows.Forms;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 
-namespace WpfApplication10
+namespace Text_Compression
 {
     /// <summary>
     /// Interaction logic for MainWindow.xaml
@@ -26,27 +25,34 @@ namespace WpfApplication10
         string Text;
         List<bool> EncodedList;
         List<UInt16> EncodedText;
-        List<bool> DecodedList;
-        List<UInt16> DecodedText;
-        StringBuilder DecompredText;
-        string path;
-        Encoding Encode;
+        List<char> EncodedByte;
+        double[] prop, lows, highs;
+        long numbers = 0;
+        double result;
         public MainWindow()
         {
             InitializeComponent();
+
         }
 
-        public MainWindow(string Path)
+        private void Button_Click_1(object sender, RoutedEventArgs e)
         {
-            path = Path;
-            Encode = Encoding.UTF8;
-            InitializeComponent();
-        }
-
-        private void Compress_Click_1(object sender, RoutedEventArgs e)
-        {
-            Text = TextBox1.Text;
+            Text = Main_Text.Text;
             Compress();
+            Encoding();
+            Decoder();
+            //EncodedByte = new List<byte>();
+            //foreach (var i in EncodedText)
+            //{
+            //    string tmp = i.ToString();
+            //    var r = tmp.ToList<char>();
+            //    foreach (var j in r)
+            //    {
+            //        byte h;
+            //        Byte.TryParse(j.ToString(), out h);
+            //        EncodedByte.Add(h);
+            //    }
+            //}
         }
 
         private string Compress()
@@ -265,7 +271,7 @@ namespace WpfApplication10
             }
             SaveFileDialog SFD = new SaveFileDialog();
             SFD.Filter = "Encoded Text|*.ctxt";
-            if (SFD.ShowDialog() == true)
+            if (SFD.ShowDialog() == System.Windows.Forms.DialogResult.OK)
             {
                 save_data_strucure(SFD.FileName);
                 return SFD.FileName;
@@ -276,14 +282,6 @@ namespace WpfApplication10
         private ushort Binary2Int16(bool p1, bool p2, bool p3, bool p4, bool p5, bool p6, bool p7, bool p8, bool p9, bool p10, bool p11, bool p12, bool p13, bool p14, bool p15, bool p16)
         {
             return (UInt16)(32768 * Bo(p1) + 16384 * Bo(p2) + 8192 * Bo(p3) + 4096 * Bo(p4) + 2048 * Bo(p5) + 1024 * Bo(p6) + 512 * Bo(p7) + 256 * Bo(p8) + 128 * Bo(p9) + 64 * Bo(p10) + 32 * Bo(p11) + 16 * Bo(p12) + 8 * Bo(p13) + 4 * Bo(p14) + 2 * Bo(p15) + Bo(p16));
-        }
-
-        private ushort Bo(bool p1)
-        {
-            if (p1)
-                return 1;
-            else
-                return 0;
         }
 
         private void save_data_strucure(string Path)
@@ -304,269 +302,116 @@ namespace WpfApplication10
             Writer.Close();
         }
 
-        private void Decompress_Click_3(object sender, RoutedEventArgs e)
+        private ushort Bo(bool p1)
         {
-            OpenFileDialog OFD = new OpenFileDialog();
-            OFD.Filter = "Encoded Text|*.ctxt";
-            if (OFD.ShowDialog() == true)
-            {
-                Read_data_strucure(OFD.FileName);
-                TextBlock1.Text = DecompredText.ToString();
-            }
+            if (p1)
+                return 1;
+            else
+                return 0;
         }
 
-        private void Read_data_strucure(string path)
+        private void Encoding()
         {
-            DecodedList = new List<bool>();
-            DecodedText = new List<UInt16>();
-            DecompredText = new StringBuilder(String.Empty);
-            Stream OpendFile = File.OpenRead(path);
-            BinaryReader DeSerializer = new BinaryReader(OpendFile);
-            if (DeSerializer.ReadString().Contains("CTxt"))
+            Helper();
+            double low = 0.0;
+            double high = 1;
+            double range;
+            foreach (var i in EncodedText)
             {
-                DeSerializer.ReadBoolean();
-                var Language = DeSerializer.ReadString();
-                DeSerializer.ReadBoolean();
-                DeSerializer.ReadString();
-                DeSerializer.ReadBoolean();
-                int count = DeSerializer.ReadInt32();
-                var f = DeSerializer.ReadBoolean();
-                for (int i = 0; i < count; i++)
-                    DecodedText.Add(DeSerializer.ReadUInt16());
-                foreach (var i in DecodedText)
-                    Int16toBinary(i);
-                #region IF
-                for (int i = 0; i < DecodedList.Count / 6; i++)
+                string tmp = i.ToString();
+                var r = tmp.ToList<char>();
+                foreach (var j in r)
                 {
-                    if (!DecodedList[i * 6] && !DecodedList[i * 6 + 1] && !DecodedList[i * 6 + 2] && !DecodedList[i * 6 + 3] && !DecodedList[i * 6 + 4] && !DecodedList[i * 6 + 5])
-                        DecompredText.Append(' ');
-                    else if (!DecodedList[i * 6] && !DecodedList[i * 6 + 1] && !DecodedList[i * 6 + 2] && !DecodedList[i * 6 + 3] && !DecodedList[i * 6 + 4] && DecodedList[i * 6 + 5])
-                        DecompredText.Append('ا');
-                    else if (!DecodedList[i * 6] && !DecodedList[i * 6 + 1] && !DecodedList[i * 6 + 2] && !DecodedList[i * 6 + 3] && DecodedList[i * 6 + 4] && !DecodedList[i * 6 + 5])
-                        DecompredText.Append('ب');
-                    else if (!DecodedList[i * 6] && !DecodedList[i * 6 + 1] && !DecodedList[i * 6 + 2] && !DecodedList[i * 6 + 3] && DecodedList[i * 6 + 4] && DecodedList[i * 6 + 5])
-                        DecompredText.Append('ت');
-                    else if (!DecodedList[i * 6] && !DecodedList[i * 6 + 1] && !DecodedList[i * 6 + 2] && DecodedList[i * 6 + 3] && !DecodedList[i * 6 + 4] && !DecodedList[i * 6 + 5])
-                        DecompredText.Append('ث');
-                    else if (!DecodedList[i * 6] && !DecodedList[i * 6 + 1] && !DecodedList[i * 6 + 2] && DecodedList[i * 6 + 3] && !DecodedList[i * 6 + 4] && DecodedList[i * 6 + 5])
-                        DecompredText.Append('ج');
-                    else if (!DecodedList[i * 6] && !DecodedList[i * 6 + 1] && !DecodedList[i * 6 + 2] && DecodedList[i * 6 + 3] && DecodedList[i * 6 + 4] && !DecodedList[i * 6 + 5])
-                        DecompredText.Append('ح');
-                    else if (!DecodedList[i * 6] && !DecodedList[i * 6 + 1] && !DecodedList[i * 6 + 2] && DecodedList[i * 6 + 3] && DecodedList[i * 6 + 4] && DecodedList[i * 6 + 5])
-                        DecompredText.Append('خ');
-                    else if (!DecodedList[i * 6] && !DecodedList[i * 6 + 1] && DecodedList[i * 6 + 2] && !DecodedList[i * 6 + 3] && !DecodedList[i * 6 + 4] && !DecodedList[i * 6 + 5])
-                        DecompredText.Append('د');
-                    else if (!DecodedList[i * 6] && !DecodedList[i * 6 + 1] && DecodedList[i * 6 + 2] && !DecodedList[i * 6 + 3] && !DecodedList[i * 6 + 4] && DecodedList[i * 6 + 5])
-                        DecompredText.Append('ذ');
-                    else if (!DecodedList[i * 6] && !DecodedList[i * 6 + 1] && DecodedList[i * 6 + 2] && !DecodedList[i * 6 + 3] && DecodedList[i * 6 + 4] && !DecodedList[i * 6 + 5])
-                        DecompredText.Append('ر');
-                    else if (!DecodedList[i * 6] && !DecodedList[i * 6 + 1] && DecodedList[i * 6 + 2] && !DecodedList[i * 6 + 3] && DecodedList[i * 6 + 4] && DecodedList[i * 6 + 5])
-                        DecompredText.Append('ز');
-                    else if (!DecodedList[i * 6] && !DecodedList[i * 6 + 1] && DecodedList[i * 6 + 2] && DecodedList[i * 6 + 3] && !DecodedList[i * 6 + 4] && !DecodedList[i * 6 + 5])
-                        DecompredText.Append('س');
-                    else if (!DecodedList[i * 6] && !DecodedList[i * 6 + 1] && DecodedList[i * 6 + 2] && DecodedList[i * 6 + 3] && !DecodedList[i * 6 + 4] && DecodedList[i * 6 + 5])
-                        DecompredText.Append('ش');
-                    else if (!DecodedList[i * 6] && !DecodedList[i * 6 + 1] && DecodedList[i * 6 + 2] && DecodedList[i * 6 + 3] && DecodedList[i * 6 + 4] && !DecodedList[i * 6 + 5])
-                        DecompredText.Append('ص');
-                    else if (!DecodedList[i * 6] && !DecodedList[i * 6 + 1] && DecodedList[i * 6 + 2] && DecodedList[i * 6 + 3] && DecodedList[i * 6 + 4] && DecodedList[i * 6 + 5])
-                        DecompredText.Append('ض');
-                    else if (!DecodedList[i * 6] && DecodedList[i * 6 + 1] && !DecodedList[i * 6 + 2] && !DecodedList[i * 6 + 3] && !DecodedList[i * 6 + 4] && !DecodedList[i * 6 + 5])
-                        DecompredText.Append('ط');
-                    else if (!DecodedList[i * 6] && DecodedList[i * 6 + 1] && !DecodedList[i * 6 + 2] && !DecodedList[i * 6 + 3] && !DecodedList[i * 6 + 4] && DecodedList[i * 6 + 5])
-                        DecompredText.Append('ظ');
-                    else if (!DecodedList[i * 6] && DecodedList[i * 6 + 1] && !DecodedList[i * 6 + 2] && !DecodedList[i * 6 + 3] && DecodedList[i * 6 + 4] && !DecodedList[i * 6 + 5])
-                        DecompredText.Append('ع');
-                    else if (!DecodedList[i * 6] && DecodedList[i * 6 + 1] && !DecodedList[i * 6 + 2] && !DecodedList[i * 6 + 3] && DecodedList[i * 6 + 4] && DecodedList[i * 6 + 5])
-                        DecompredText.Append('غ');
-                    else if (!DecodedList[i * 6] && DecodedList[i * 6 + 1] && !DecodedList[i * 6 + 2] && DecodedList[i * 6 + 3] && !DecodedList[i * 6 + 4] && !DecodedList[i * 6 + 5])
-                        DecompredText.Append('ف');
-                    else if (!DecodedList[i * 6] && DecodedList[i * 6 + 1] && !DecodedList[i * 6 + 2] && DecodedList[i * 6 + 3] && !DecodedList[i * 6 + 4] && DecodedList[i * 6 + 5])
-                        DecompredText.Append('ق');
-                    else if (!DecodedList[i * 6] && DecodedList[i * 6 + 1] && !DecodedList[i * 6 + 2] && DecodedList[i * 6 + 3] && DecodedList[i * 6 + 4] && !DecodedList[i * 6 + 5])
-                        DecompredText.Append('ك');
-                    else if (!DecodedList[i * 6] && DecodedList[i * 6 + 1] && !DecodedList[i * 6 + 2] && DecodedList[i * 6 + 3] && DecodedList[i * 6 + 4] && DecodedList[i * 6 + 5])
-                        DecompredText.Append('ل');
-                    else if (!DecodedList[i * 6] && DecodedList[i * 6 + 1] && DecodedList[i * 6 + 2] && !DecodedList[i * 6 + 3] && !DecodedList[i * 6 + 4] && !DecodedList[i * 6 + 5])
-                        DecompredText.Append('م');
-                    else if (!DecodedList[i * 6] && DecodedList[i * 6 + 1] && DecodedList[i * 6 + 2] && !DecodedList[i * 6 + 3] && !DecodedList[i * 6 + 4] && DecodedList[i * 6 + 5])
-                        DecompredText.Append('ن');
-                    else if (!DecodedList[i * 6] && DecodedList[i * 6 + 1] && DecodedList[i * 6 + 2] && !DecodedList[i * 6 + 3] && DecodedList[i * 6 + 4] && !DecodedList[i * 6 + 5])
-                        DecompredText.Append('ه');
-                    else if (!DecodedList[i * 6] && DecodedList[i * 6 + 1] && DecodedList[i * 6 + 2] && !DecodedList[i * 6 + 3] && DecodedList[i * 6 + 4] && DecodedList[i * 6 + 5])
-                        DecompredText.Append('و');
-                    else if (!DecodedList[i * 6] && DecodedList[i * 6 + 1] && DecodedList[i * 6 + 2] && DecodedList[i * 6 + 3] && !DecodedList[i * 6 + 4] && !DecodedList[i * 6 + 5])
-                        DecompredText.Append('ي');
-                    else if (!DecodedList[i * 6] && DecodedList[i * 6 + 1] && DecodedList[i * 6 + 2] && DecodedList[i * 6 + 3] && !DecodedList[i * 6 + 4] && DecodedList[i * 6 + 5])
-                        DecompredText.Append('أ');
-                    else if (!DecodedList[i * 6] && DecodedList[i * 6 + 1] && DecodedList[i * 6 + 2] && DecodedList[i * 6 + 3] && DecodedList[i * 6 + 4] && !DecodedList[i * 6 + 5])
-                        DecompredText.Append('إ');
-                    else if (!DecodedList[i * 6] && DecodedList[i * 6 + 1] && DecodedList[i * 6 + 2] && DecodedList[i * 6 + 3] && DecodedList[i * 6 + 4] && DecodedList[i * 6 + 5])
-                        DecompredText.Append('آ');
-                    else if (DecodedList[i * 6] && !DecodedList[i * 6 + 1] && !DecodedList[i * 6 + 2] && !DecodedList[i * 6 + 3] && !DecodedList[i * 6 + 4] && !DecodedList[i * 6 + 5])
-                        DecompredText.Append('ى');
-                    else if (DecodedList[i * 6] && !DecodedList[i * 6 + 1] && !DecodedList[i * 6 + 2] && !DecodedList[i * 6 + 3] && !DecodedList[i * 6 + 4] && DecodedList[i * 6 + 5])
-                        DecompredText.Append('ة');
-                    else if (DecodedList[i * 6] && !DecodedList[i * 6 + 1] && !DecodedList[i * 6 + 2] && !DecodedList[i * 6 + 3] && DecodedList[i * 6 + 4] && !DecodedList[i * 6 + 5])
-                        DecompredText.Append('ء');
-                    else if (DecodedList[i * 6] && !DecodedList[i * 6 + 1] && !DecodedList[i * 6 + 2] && !DecodedList[i * 6 + 3] && DecodedList[i * 6 + 4] && DecodedList[i * 6 + 5])
-                        DecompredText.Append('ؤ');
-                    else if (DecodedList[i * 6] && !DecodedList[i * 6 + 1] && !DecodedList[i * 6 + 2] && DecodedList[i * 6 + 3] && !DecodedList[i * 6 + 4] && !DecodedList[i * 6 + 5])
-                        DecompredText.Append('ئ');
-                    else if (DecodedList[i * 6] && !DecodedList[i * 6 + 1] && !DecodedList[i * 6 + 2] && DecodedList[i * 6 + 3] && !DecodedList[i * 6 + 4] && DecodedList[i * 6 + 5])
-                        DecompredText.Append(',');
-                    else if (DecodedList[i * 6] && !DecodedList[i * 6 + 1] && !DecodedList[i * 6 + 2] && DecodedList[i * 6 + 3] && DecodedList[i * 6 + 4] && !DecodedList[i * 6 + 5])
-                        DecompredText.Append('.');
-                    else if (DecodedList[i * 6] && !DecodedList[i * 6 + 1] && !DecodedList[i * 6 + 2] && DecodedList[i * 6 + 3] && DecodedList[i * 6 + 4] && DecodedList[i * 6 + 5])
-                        DecompredText.Append(')');
-                    else if (DecodedList[i * 6] && !DecodedList[i * 6 + 1] && DecodedList[i * 6 + 2] && !DecodedList[i * 6 + 3] && !DecodedList[i * 6 + 4] && !DecodedList[i * 6 + 5])
-                        DecompredText.Append('(');
-                    else if (DecodedList[i * 6] && !DecodedList[i * 6 + 1] && DecodedList[i * 6 + 2] && !DecodedList[i * 6 + 3] && !DecodedList[i * 6 + 4] && DecodedList[i * 6 + 5])
-                        DecompredText.Append('0');
-                    else if (DecodedList[i * 6] && !DecodedList[i * 6 + 1] && DecodedList[i * 6 + 2] && !DecodedList[i * 6 + 3] && DecodedList[i * 6 + 4] && !DecodedList[i * 6 + 5])
-                        DecompredText.Append('1');
-                    else if (DecodedList[i * 6] && !DecodedList[i * 6 + 1] && DecodedList[i * 6 + 2] && !DecodedList[i * 6 + 3] && DecodedList[i * 6 + 4] && DecodedList[i * 6 + 5])
-                        DecompredText.Append('2');
-                    else if (DecodedList[i * 6] && !DecodedList[i * 6 + 1] && DecodedList[i * 6 + 2] && DecodedList[i * 6 + 3] && !DecodedList[i * 6 + 4] && !DecodedList[i * 6 + 5])
-                        DecompredText.Append('3');
-                    else if (DecodedList[i * 6] && !DecodedList[i * 6 + 1] && DecodedList[i * 6 + 2] && DecodedList[i * 6 + 3] && !DecodedList[i * 6 + 4] && DecodedList[i * 6 + 5])
-                        DecompredText.Append('4');
-                    else if (DecodedList[i * 6] && !DecodedList[i * 6 + 1] && DecodedList[i * 6 + 2] && DecodedList[i * 6 + 3] && DecodedList[i * 6 + 4] && !DecodedList[i * 6 + 5])
-                        DecompredText.Append('5');
-                    else if (DecodedList[i * 6] && !DecodedList[i * 6 + 1] && DecodedList[i * 6 + 2] && DecodedList[i * 6 + 3] && DecodedList[i * 6 + 4] && DecodedList[i * 6 + 5])
-                        DecompredText.Append('6');
-                    else if (DecodedList[i * 6] && DecodedList[i * 6 + 1] && !DecodedList[i * 6 + 2] && !DecodedList[i * 6 + 3] && !DecodedList[i * 6 + 4] && !DecodedList[i * 6 + 5])
-                        DecompredText.Append('7');
-                    else if (DecodedList[i * 6] && DecodedList[i * 6 + 1] && !DecodedList[i * 6 + 2] && !DecodedList[i * 6 + 3] && !DecodedList[i * 6 + 4] && DecodedList[i * 6 + 5])
-                        DecompredText.Append('8');
-                    else if (DecodedList[i * 6] && DecodedList[i * 6 + 1] && !DecodedList[i * 6 + 2] && !DecodedList[i * 6 + 3] && DecodedList[i * 6 + 4] && !DecodedList[i * 6 + 5])
-                        DecompredText.Append('9');
-                    else if (DecodedList[i * 6] && DecodedList[i * 6 + 1] && !DecodedList[i * 6 + 2] && !DecodedList[i * 6 + 3] && DecodedList[i * 6 + 4] && DecodedList[i * 6 + 5])
-                        DecompredText.Append('َ');
-                    else if (DecodedList[i * 6] && DecodedList[i * 6 + 1] && !DecodedList[i * 6 + 2] && DecodedList[i * 6 + 3] && !DecodedList[i * 6 + 4] && !DecodedList[i * 6 + 5])
-                        DecompredText.Append('ُ');
-                    else if (DecodedList[i * 6] && DecodedList[i * 6 + 1] && !DecodedList[i * 6 + 2] && DecodedList[i * 6 + 3] && !DecodedList[i * 6 + 4] && DecodedList[i * 6 + 5])
-                        DecompredText.Append('ِ');
-                    else if (DecodedList[i * 6] && DecodedList[i * 6 + 1] && !DecodedList[i * 6 + 2] && DecodedList[i * 6 + 3] && DecodedList[i * 6 + 4] && !DecodedList[i * 6 + 5])
-                        DecompredText.Append('ْ');
-                    else if (DecodedList[i * 6] && DecodedList[i * 6 + 1] && !DecodedList[i * 6 + 2] && DecodedList[i * 6 + 3] && DecodedList[i * 6 + 4] && DecodedList[i * 6 + 5])
-                        DecompredText.Append('ً');
-                    else if (DecodedList[i * 6] && DecodedList[i * 6 + 1] && DecodedList[i * 6 + 2] && !DecodedList[i * 6 + 3] && !DecodedList[i * 6 + 4] && !DecodedList[i * 6 + 5])
-                        DecompredText.Append('ٌ');
-                    else if (DecodedList[i * 6] && DecodedList[i * 6 + 1] && DecodedList[i * 6 + 2] && !DecodedList[i * 6 + 3] && !DecodedList[i * 6 + 4] && DecodedList[i * 6 + 5])
-                        DecompredText.Append('ْ');
-                    else if (DecodedList[i * 6] && DecodedList[i * 6 + 1] && DecodedList[i * 6 + 2] && !DecodedList[i * 6 + 3] && DecodedList[i * 6 + 4] && !DecodedList[i * 6 + 5])
-                        DecompredText.Append('ّ');
-                    else if (DecodedList[i * 6] && DecodedList[i * 6 + 1] && DecodedList[i * 6 + 2] && !DecodedList[i * 6 + 3] && DecodedList[i * 6 + 4] && DecodedList[i * 6 + 5])
-                        DecompredText.Append('\n');
-                    else if (DecodedList[i * 6] && DecodedList[i * 6 + 1] && DecodedList[i * 6 + 2] && DecodedList[i * 6 + 3] && !DecodedList[i * 6 + 4] && !DecodedList[i * 6 + 5])
-                        DecompredText.Append('@');
-                    else if (DecodedList[i * 6] && DecodedList[i * 6 + 1] && DecodedList[i * 6 + 2] && DecodedList[i * 6 + 3] && !DecodedList[i * 6 + 4] && DecodedList[i * 6 + 5])
-                        DecompredText.Append('#');
-                    else if (DecodedList[i * 6] && DecodedList[i * 6 + 1] && DecodedList[i * 6 + 2] && DecodedList[i * 6 + 3] && DecodedList[i * 6 + 4] && !DecodedList[i * 6 + 5])
-                        DecompredText.Append('\t');
+                    range = high - low;
+                    high = low + range * highs[j - 48];
+                    low = low + range * lows[j - 48];
                 }
-                #endregion
+                //*
+                range = high - low;
+                high = low + range * highs[10];
+                low = low + range * lows[10];
             }
-            else
-                MessageBox.Show("ملف خاطئ", "خطأ", MessageBoxButton.OK, MessageBoxImage.Error);
-            OpendFile.Close();
+            result = low;
+
         }
 
-        private void Int16toBinary(ushort i)
+        private void Helper()
         {
-            bool[] tmp = new bool[16];
-            tmp[0] = !(i % 2 == 0); i /= 2;
-            tmp[1] = !(i % 2 == 0); i /= 2;
-            tmp[2] = !(i % 2 == 0); i /= 2;
-            tmp[3] = !(i % 2 == 0); i /= 2;
-            tmp[4] = !(i % 2 == 0); i /= 2;
-            tmp[5] = !(i % 2 == 0); i /= 2;
-            tmp[6] = !(i % 2 == 0); i /= 2;
-            tmp[7] = !(i % 2 == 0); i /= 2;
-            tmp[8] = !(i % 2 == 0); i /= 2;
-            tmp[9] = !(i % 2 == 0); i /= 2;
-            tmp[10] = !(i % 2 == 0); i /= 2;
-            tmp[11] = !(i % 2 == 0); i /= 2;
-            tmp[12] = !(i % 2 == 0); i /= 2;
-            tmp[13] = !(i % 2 == 0); i /= 2;
-            tmp[14] = !(i % 2 == 0); i /= 2;
-            tmp[15] = !(i % 2 == 0);
-            for (int n = 15; n > -1; n--)
-                DecodedList.Add(tmp[n]);
-        }
+            double high = 1;
+            prop = new double[11];
+            lows = new double[11];
+            highs = new double[11];
 
-        private void Compress_File_Click_3(object sender, RoutedEventArgs e)
-        {
-            OpenFileDialog OFD = new OpenFileDialog();
-            OFD.Filter = "Plan Text|*.txt";
-            if (OFD.ShowDialog() == true)
+            foreach (var i in EncodedText)
             {
-                Stream St = File.OpenRead(OFD.FileName);
-                StreamReader SR = new StreamReader(St);
-                Text = SR.ReadToEnd();
-                string pa = Compress();
-                MessageBox.Show("Done\nComressed File \"" + OFD.FileName + "\" to \"" + pa + "\"", "Compress File", MessageBoxButton.OK, MessageBoxImage.Information);
+                string tmp = i.ToString();
+                var r = tmp.ToList<char>();
+                foreach (var j in r)
+                {
+                    if (j.Equals('0'))
+                        prop[0]++;
+                    else if (j.Equals('1'))
+                        prop[1]++;
+                    else if (j.Equals('2'))
+                        prop[2]++;
+                    else if (j.Equals('3'))
+                        prop[3]++;
+                    else if (j.Equals('4'))
+                        prop[4]++;
+                    else if (j.Equals('5'))
+                        prop[5]++;
+                    else if (j.Equals('6'))
+                        prop[6]++;
+                    else if (j.Equals('7'))
+                        prop[7]++;
+                    else if (j.Equals('8'))
+                        prop[8]++;
+                    else if (j.Equals('9'))
+                        prop[9]++;
+                    numbers++;
+                }
+                numbers++;
+                prop[10]++;
             }
-            else
-                MessageBox.Show("Error", "Compress File", MessageBoxButton.OK, MessageBoxImage.Hand);
-        }
-
-        private void Decompress_to_File_Click_3(object sender, RoutedEventArgs e)
-        {
-            OpenFileDialog OFD = new OpenFileDialog();
-            OFD.Filter = "Encoded Text|*.ctxt";
-            if (OFD.ShowDialog() == true)
-                Read_data_strucure(OFD.FileName);
-            SaveFileDialog SFD = new SaveFileDialog();
-            SFD.Filter = "Plan Text|*.txt";
-            if (SFD.ShowDialog() == true)
+            for (int i = 0; i < 11; i++)
+                prop[i] = prop[i] / numbers;
+            for (int i = 0; i < 11; i++)
             {
-                Stream S = File.OpenWrite(SFD.FileName);
-                StreamWriter SW = new StreamWriter(S, Encode);
-                SW.Write(DecompredText.ToString());
-                SW.Close();
-                MessageBox.Show("Done\nDecomressed File \"" + OFD.FileName + "\" to \"" + SFD.FileName + "\"", "Compress File", MessageBoxButton.OK, MessageBoxImage.Information);
-            }
-            else
-                MessageBox.Show("Error", "Compress File", MessageBoxButton.OK, MessageBoxImage.Hand);
-        }
-
-        private void Window_Loaded_1(object sender, RoutedEventArgs e)
-        {
-            if (File.Exists(path))
-            {
-                DecodedList = new List<bool>();
-                DecodedText = new List<UInt16>();
-                OpenFileDialog OFD = new OpenFileDialog();
-                OFD.Filter = "Encoded Text|*.ctxt";
-                if (OFD.ShowDialog() == true)
-                    Read_data_strucure(OFD.FileName);
+                highs[i] = high;
+                lows[i] = highs[i] - prop[i];
+                high = lows[i];
             }
         }
 
-        private void ComboBox_SelectionChanged_1(object sender, SelectionChangedEventArgs e)
+        private void Decoder()
         {
-            switch (ComboBox1.SelectedIndex)
+            EncodedByte = new List<char>();
+            double range;
+            char symbol;
+            double number = result;
+            while (number > 0 && number < 1)
             {
-                case 0:
-                    Encode = Encoding.ASCII;
-                    break;
-                case 1:
-                    Encode = Encoding.BigEndianUnicode;
-                    break;
-                case 2:
-                    Encode = Encoding.Unicode;
-                    break;
-                case 3:
-                    Encode = Encoding.UTF32;
-                    break;
-                case 4:
-                    Encode = Encoding.UTF7;
-                    break;
-                default:
-                    Encode = Encoding.UTF8;
-                    break;
+                symbol = Find_Sumbol(number);
+                EncodedByte.Add(symbol);
+                if (symbol == 94)
+                {
+                    range = highs[10] - lows[10];
+                    number = (number - lows[10]) / range;
+                }
+                else
+                {
+                    range = highs[symbol - 48] - lows[symbol - 48];
+                    number = (number - lows[symbol - 48]) / range;
+                }
             }
+        }
+
+        private char Find_Sumbol(double s)
+        {
+            for (int i = 0; i < 10; i++)
+                if (s > lows[i])
+                    return i.ToString()[0];
+            return '^';
         }
     }
 }
