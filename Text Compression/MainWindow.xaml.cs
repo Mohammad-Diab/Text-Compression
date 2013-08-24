@@ -14,6 +14,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using System.Numerics;
 
 namespace Text_Compression
 {
@@ -24,11 +25,14 @@ namespace Text_Compression
     {
         string Text;
         List<bool> EncodedList;
+        List<bool> DecodedList;
         List<UInt16> EncodedText;
         List<char> EncodedByte;
-        double[] prop, lows, highs;
+        long[] freq;
+        BigInteger[] prop, lows, highs;
         long numbers = 0;
-        double result;
+        BigInteger result;
+        StringBuilder DecompredText = new StringBuilder(string.Empty);
         public MainWindow()
         {
             InitializeComponent();
@@ -41,6 +45,24 @@ namespace Text_Compression
             Compress();
             Encoding();
             Decoder();
+            string b = string.Empty;
+            List<UInt16> UnEncodedText = new List<ushort>();
+            foreach(var i in EncodedByte)
+            {
+                if (i == '^')
+                {
+                    ushort tmp;
+                    ushort.TryParse(b, out tmp);
+                    UnEncodedText.Add(tmp);
+                    b = string.Empty;
+                }
+                else
+                    b += i;
+            }
+            DecompredText = new StringBuilder(string.Empty);
+            DecodedList = new List<bool>();
+            Decompress(UnEncodedText);
+            System.Windows.MessageBox.Show(DecompredText.ToString(), "Done", MessageBoxButton.OK, MessageBoxImage.Error);
             //EncodedByte = new List<byte>();
             //foreach (var i in EncodedText)
             //{
@@ -53,6 +75,166 @@ namespace Text_Compression
             //        EncodedByte.Add(h);
             //    }
             //}
+        }
+
+        private void Decompress(List<UInt16> UnEncodedText)
+        {
+            foreach (var i in UnEncodedText)
+                Int16toBinary(i);
+            #region IF
+            for (int i = 0; i < DecodedList.Count / 6; i++)
+            {
+                if (!DecodedList[i * 6] && !DecodedList[i * 6 + 1] && !DecodedList[i * 6 + 2] && !DecodedList[i * 6 + 3] && !DecodedList[i * 6 + 4] && !DecodedList[i * 6 + 5])
+                    DecompredText.Append(' ');
+                else if (!DecodedList[i * 6] && !DecodedList[i * 6 + 1] && !DecodedList[i * 6 + 2] && !DecodedList[i * 6 + 3] && !DecodedList[i * 6 + 4] && DecodedList[i * 6 + 5])
+                    DecompredText.Append('ا');
+                else if (!DecodedList[i * 6] && !DecodedList[i * 6 + 1] && !DecodedList[i * 6 + 2] && !DecodedList[i * 6 + 3] && DecodedList[i * 6 + 4] && !DecodedList[i * 6 + 5])
+                    DecompredText.Append('ب');
+                else if (!DecodedList[i * 6] && !DecodedList[i * 6 + 1] && !DecodedList[i * 6 + 2] && !DecodedList[i * 6 + 3] && DecodedList[i * 6 + 4] && DecodedList[i * 6 + 5])
+                    DecompredText.Append('ت');
+                else if (!DecodedList[i * 6] && !DecodedList[i * 6 + 1] && !DecodedList[i * 6 + 2] && DecodedList[i * 6 + 3] && !DecodedList[i * 6 + 4] && !DecodedList[i * 6 + 5])
+                    DecompredText.Append('ث');
+                else if (!DecodedList[i * 6] && !DecodedList[i * 6 + 1] && !DecodedList[i * 6 + 2] && DecodedList[i * 6 + 3] && !DecodedList[i * 6 + 4] && DecodedList[i * 6 + 5])
+                    DecompredText.Append('ج');
+                else if (!DecodedList[i * 6] && !DecodedList[i * 6 + 1] && !DecodedList[i * 6 + 2] && DecodedList[i * 6 + 3] && DecodedList[i * 6 + 4] && !DecodedList[i * 6 + 5])
+                    DecompredText.Append('ح');
+                else if (!DecodedList[i * 6] && !DecodedList[i * 6 + 1] && !DecodedList[i * 6 + 2] && DecodedList[i * 6 + 3] && DecodedList[i * 6 + 4] && DecodedList[i * 6 + 5])
+                    DecompredText.Append('خ');
+                else if (!DecodedList[i * 6] && !DecodedList[i * 6 + 1] && DecodedList[i * 6 + 2] && !DecodedList[i * 6 + 3] && !DecodedList[i * 6 + 4] && !DecodedList[i * 6 + 5])
+                    DecompredText.Append('د');
+                else if (!DecodedList[i * 6] && !DecodedList[i * 6 + 1] && DecodedList[i * 6 + 2] && !DecodedList[i * 6 + 3] && !DecodedList[i * 6 + 4] && DecodedList[i * 6 + 5])
+                    DecompredText.Append('ذ');
+                else if (!DecodedList[i * 6] && !DecodedList[i * 6 + 1] && DecodedList[i * 6 + 2] && !DecodedList[i * 6 + 3] && DecodedList[i * 6 + 4] && !DecodedList[i * 6 + 5])
+                    DecompredText.Append('ر');
+                else if (!DecodedList[i * 6] && !DecodedList[i * 6 + 1] && DecodedList[i * 6 + 2] && !DecodedList[i * 6 + 3] && DecodedList[i * 6 + 4] && DecodedList[i * 6 + 5])
+                    DecompredText.Append('ز');
+                else if (!DecodedList[i * 6] && !DecodedList[i * 6 + 1] && DecodedList[i * 6 + 2] && DecodedList[i * 6 + 3] && !DecodedList[i * 6 + 4] && !DecodedList[i * 6 + 5])
+                    DecompredText.Append('س');
+                else if (!DecodedList[i * 6] && !DecodedList[i * 6 + 1] && DecodedList[i * 6 + 2] && DecodedList[i * 6 + 3] && !DecodedList[i * 6 + 4] && DecodedList[i * 6 + 5])
+                    DecompredText.Append('ش');
+                else if (!DecodedList[i * 6] && !DecodedList[i * 6 + 1] && DecodedList[i * 6 + 2] && DecodedList[i * 6 + 3] && DecodedList[i * 6 + 4] && !DecodedList[i * 6 + 5])
+                    DecompredText.Append('ص');
+                else if (!DecodedList[i * 6] && !DecodedList[i * 6 + 1] && DecodedList[i * 6 + 2] && DecodedList[i * 6 + 3] && DecodedList[i * 6 + 4] && DecodedList[i * 6 + 5])
+                    DecompredText.Append('ض');
+                else if (!DecodedList[i * 6] && DecodedList[i * 6 + 1] && !DecodedList[i * 6 + 2] && !DecodedList[i * 6 + 3] && !DecodedList[i * 6 + 4] && !DecodedList[i * 6 + 5])
+                    DecompredText.Append('ط');
+                else if (!DecodedList[i * 6] && DecodedList[i * 6 + 1] && !DecodedList[i * 6 + 2] && !DecodedList[i * 6 + 3] && !DecodedList[i * 6 + 4] && DecodedList[i * 6 + 5])
+                    DecompredText.Append('ظ');
+                else if (!DecodedList[i * 6] && DecodedList[i * 6 + 1] && !DecodedList[i * 6 + 2] && !DecodedList[i * 6 + 3] && DecodedList[i * 6 + 4] && !DecodedList[i * 6 + 5])
+                    DecompredText.Append('ع');
+                else if (!DecodedList[i * 6] && DecodedList[i * 6 + 1] && !DecodedList[i * 6 + 2] && !DecodedList[i * 6 + 3] && DecodedList[i * 6 + 4] && DecodedList[i * 6 + 5])
+                    DecompredText.Append('غ');
+                else if (!DecodedList[i * 6] && DecodedList[i * 6 + 1] && !DecodedList[i * 6 + 2] && DecodedList[i * 6 + 3] && !DecodedList[i * 6 + 4] && !DecodedList[i * 6 + 5])
+                    DecompredText.Append('ف');
+                else if (!DecodedList[i * 6] && DecodedList[i * 6 + 1] && !DecodedList[i * 6 + 2] && DecodedList[i * 6 + 3] && !DecodedList[i * 6 + 4] && DecodedList[i * 6 + 5])
+                    DecompredText.Append('ق');
+                else if (!DecodedList[i * 6] && DecodedList[i * 6 + 1] && !DecodedList[i * 6 + 2] && DecodedList[i * 6 + 3] && DecodedList[i * 6 + 4] && !DecodedList[i * 6 + 5])
+                    DecompredText.Append('ك');
+                else if (!DecodedList[i * 6] && DecodedList[i * 6 + 1] && !DecodedList[i * 6 + 2] && DecodedList[i * 6 + 3] && DecodedList[i * 6 + 4] && DecodedList[i * 6 + 5])
+                    DecompredText.Append('ل');
+                else if (!DecodedList[i * 6] && DecodedList[i * 6 + 1] && DecodedList[i * 6 + 2] && !DecodedList[i * 6 + 3] && !DecodedList[i * 6 + 4] && !DecodedList[i * 6 + 5])
+                    DecompredText.Append('م');
+                else if (!DecodedList[i * 6] && DecodedList[i * 6 + 1] && DecodedList[i * 6 + 2] && !DecodedList[i * 6 + 3] && !DecodedList[i * 6 + 4] && DecodedList[i * 6 + 5])
+                    DecompredText.Append('ن');
+                else if (!DecodedList[i * 6] && DecodedList[i * 6 + 1] && DecodedList[i * 6 + 2] && !DecodedList[i * 6 + 3] && DecodedList[i * 6 + 4] && !DecodedList[i * 6 + 5])
+                    DecompredText.Append('ه');
+                else if (!DecodedList[i * 6] && DecodedList[i * 6 + 1] && DecodedList[i * 6 + 2] && !DecodedList[i * 6 + 3] && DecodedList[i * 6 + 4] && DecodedList[i * 6 + 5])
+                    DecompredText.Append('و');
+                else if (!DecodedList[i * 6] && DecodedList[i * 6 + 1] && DecodedList[i * 6 + 2] && DecodedList[i * 6 + 3] && !DecodedList[i * 6 + 4] && !DecodedList[i * 6 + 5])
+                    DecompredText.Append('ي');
+                else if (!DecodedList[i * 6] && DecodedList[i * 6 + 1] && DecodedList[i * 6 + 2] && DecodedList[i * 6 + 3] && !DecodedList[i * 6 + 4] && DecodedList[i * 6 + 5])
+                    DecompredText.Append('أ');
+                else if (!DecodedList[i * 6] && DecodedList[i * 6 + 1] && DecodedList[i * 6 + 2] && DecodedList[i * 6 + 3] && DecodedList[i * 6 + 4] && !DecodedList[i * 6 + 5])
+                    DecompredText.Append('إ');
+                else if (!DecodedList[i * 6] && DecodedList[i * 6 + 1] && DecodedList[i * 6 + 2] && DecodedList[i * 6 + 3] && DecodedList[i * 6 + 4] && DecodedList[i * 6 + 5])
+                    DecompredText.Append('آ');
+                else if (DecodedList[i * 6] && !DecodedList[i * 6 + 1] && !DecodedList[i * 6 + 2] && !DecodedList[i * 6 + 3] && !DecodedList[i * 6 + 4] && !DecodedList[i * 6 + 5])
+                    DecompredText.Append('ى');
+                else if (DecodedList[i * 6] && !DecodedList[i * 6 + 1] && !DecodedList[i * 6 + 2] && !DecodedList[i * 6 + 3] && !DecodedList[i * 6 + 4] && DecodedList[i * 6 + 5])
+                    DecompredText.Append('ة');
+                else if (DecodedList[i * 6] && !DecodedList[i * 6 + 1] && !DecodedList[i * 6 + 2] && !DecodedList[i * 6 + 3] && DecodedList[i * 6 + 4] && !DecodedList[i * 6 + 5])
+                    DecompredText.Append('ء');
+                else if (DecodedList[i * 6] && !DecodedList[i * 6 + 1] && !DecodedList[i * 6 + 2] && !DecodedList[i * 6 + 3] && DecodedList[i * 6 + 4] && DecodedList[i * 6 + 5])
+                    DecompredText.Append('ؤ');
+                else if (DecodedList[i * 6] && !DecodedList[i * 6 + 1] && !DecodedList[i * 6 + 2] && DecodedList[i * 6 + 3] && !DecodedList[i * 6 + 4] && !DecodedList[i * 6 + 5])
+                    DecompredText.Append('ئ');
+                else if (DecodedList[i * 6] && !DecodedList[i * 6 + 1] && !DecodedList[i * 6 + 2] && DecodedList[i * 6 + 3] && !DecodedList[i * 6 + 4] && DecodedList[i * 6 + 5])
+                    DecompredText.Append(',');
+                else if (DecodedList[i * 6] && !DecodedList[i * 6 + 1] && !DecodedList[i * 6 + 2] && DecodedList[i * 6 + 3] && DecodedList[i * 6 + 4] && !DecodedList[i * 6 + 5])
+                    DecompredText.Append('.');
+                else if (DecodedList[i * 6] && !DecodedList[i * 6 + 1] && !DecodedList[i * 6 + 2] && DecodedList[i * 6 + 3] && DecodedList[i * 6 + 4] && DecodedList[i * 6 + 5])
+                    DecompredText.Append(')');
+                else if (DecodedList[i * 6] && !DecodedList[i * 6 + 1] && DecodedList[i * 6 + 2] && !DecodedList[i * 6 + 3] && !DecodedList[i * 6 + 4] && !DecodedList[i * 6 + 5])
+                    DecompredText.Append('(');
+                else if (DecodedList[i * 6] && !DecodedList[i * 6 + 1] && DecodedList[i * 6 + 2] && !DecodedList[i * 6 + 3] && !DecodedList[i * 6 + 4] && DecodedList[i * 6 + 5])
+                    DecompredText.Append('0');
+                else if (DecodedList[i * 6] && !DecodedList[i * 6 + 1] && DecodedList[i * 6 + 2] && !DecodedList[i * 6 + 3] && DecodedList[i * 6 + 4] && !DecodedList[i * 6 + 5])
+                    DecompredText.Append('1');
+                else if (DecodedList[i * 6] && !DecodedList[i * 6 + 1] && DecodedList[i * 6 + 2] && !DecodedList[i * 6 + 3] && DecodedList[i * 6 + 4] && DecodedList[i * 6 + 5])
+                    DecompredText.Append('2');
+                else if (DecodedList[i * 6] && !DecodedList[i * 6 + 1] && DecodedList[i * 6 + 2] && DecodedList[i * 6 + 3] && !DecodedList[i * 6 + 4] && !DecodedList[i * 6 + 5])
+                    DecompredText.Append('3');
+                else if (DecodedList[i * 6] && !DecodedList[i * 6 + 1] && DecodedList[i * 6 + 2] && DecodedList[i * 6 + 3] && !DecodedList[i * 6 + 4] && DecodedList[i * 6 + 5])
+                    DecompredText.Append('4');
+                else if (DecodedList[i * 6] && !DecodedList[i * 6 + 1] && DecodedList[i * 6 + 2] && DecodedList[i * 6 + 3] && DecodedList[i * 6 + 4] && !DecodedList[i * 6 + 5])
+                    DecompredText.Append('5');
+                else if (DecodedList[i * 6] && !DecodedList[i * 6 + 1] && DecodedList[i * 6 + 2] && DecodedList[i * 6 + 3] && DecodedList[i * 6 + 4] && DecodedList[i * 6 + 5])
+                    DecompredText.Append('6');
+                else if (DecodedList[i * 6] && DecodedList[i * 6 + 1] && !DecodedList[i * 6 + 2] && !DecodedList[i * 6 + 3] && !DecodedList[i * 6 + 4] && !DecodedList[i * 6 + 5])
+                    DecompredText.Append('7');
+                else if (DecodedList[i * 6] && DecodedList[i * 6 + 1] && !DecodedList[i * 6 + 2] && !DecodedList[i * 6 + 3] && !DecodedList[i * 6 + 4] && DecodedList[i * 6 + 5])
+                    DecompredText.Append('8');
+                else if (DecodedList[i * 6] && DecodedList[i * 6 + 1] && !DecodedList[i * 6 + 2] && !DecodedList[i * 6 + 3] && DecodedList[i * 6 + 4] && !DecodedList[i * 6 + 5])
+                    DecompredText.Append('9');
+                else if (DecodedList[i * 6] && DecodedList[i * 6 + 1] && !DecodedList[i * 6 + 2] && !DecodedList[i * 6 + 3] && DecodedList[i * 6 + 4] && DecodedList[i * 6 + 5])
+                    DecompredText.Append('َ');
+                else if (DecodedList[i * 6] && DecodedList[i * 6 + 1] && !DecodedList[i * 6 + 2] && DecodedList[i * 6 + 3] && !DecodedList[i * 6 + 4] && !DecodedList[i * 6 + 5])
+                    DecompredText.Append('ُ');
+                else if (DecodedList[i * 6] && DecodedList[i * 6 + 1] && !DecodedList[i * 6 + 2] && DecodedList[i * 6 + 3] && !DecodedList[i * 6 + 4] && DecodedList[i * 6 + 5])
+                    DecompredText.Append('ِ');
+                else if (DecodedList[i * 6] && DecodedList[i * 6 + 1] && !DecodedList[i * 6 + 2] && DecodedList[i * 6 + 3] && DecodedList[i * 6 + 4] && !DecodedList[i * 6 + 5])
+                    DecompredText.Append('ْ');
+                else if (DecodedList[i * 6] && DecodedList[i * 6 + 1] && !DecodedList[i * 6 + 2] && DecodedList[i * 6 + 3] && DecodedList[i * 6 + 4] && DecodedList[i * 6 + 5])
+                    DecompredText.Append('ً');
+                else if (DecodedList[i * 6] && DecodedList[i * 6 + 1] && DecodedList[i * 6 + 2] && !DecodedList[i * 6 + 3] && !DecodedList[i * 6 + 4] && !DecodedList[i * 6 + 5])
+                    DecompredText.Append('ٌ');
+                else if (DecodedList[i * 6] && DecodedList[i * 6 + 1] && DecodedList[i * 6 + 2] && !DecodedList[i * 6 + 3] && !DecodedList[i * 6 + 4] && DecodedList[i * 6 + 5])
+                    DecompredText.Append('ْ');
+                else if (DecodedList[i * 6] && DecodedList[i * 6 + 1] && DecodedList[i * 6 + 2] && !DecodedList[i * 6 + 3] && DecodedList[i * 6 + 4] && !DecodedList[i * 6 + 5])
+                    DecompredText.Append('ّ');
+                else if (DecodedList[i * 6] && DecodedList[i * 6 + 1] && DecodedList[i * 6 + 2] && !DecodedList[i * 6 + 3] && DecodedList[i * 6 + 4] && DecodedList[i * 6 + 5])
+                    DecompredText.Append('\n');
+                else if (DecodedList[i * 6] && DecodedList[i * 6 + 1] && DecodedList[i * 6 + 2] && DecodedList[i * 6 + 3] && !DecodedList[i * 6 + 4] && !DecodedList[i * 6 + 5])
+                    DecompredText.Append('@');
+                else if (DecodedList[i * 6] && DecodedList[i * 6 + 1] && DecodedList[i * 6 + 2] && DecodedList[i * 6 + 3] && !DecodedList[i * 6 + 4] && DecodedList[i * 6 + 5])
+                    DecompredText.Append('#');
+                else if (DecodedList[i * 6] && DecodedList[i * 6 + 1] && DecodedList[i * 6 + 2] && DecodedList[i * 6 + 3] && DecodedList[i * 6 + 4] && !DecodedList[i * 6 + 5])
+                    DecompredText.Append('\t');
+            }
+            #endregion
+        }
+
+        private void Int16toBinary(ushort i)
+        {
+            bool[] tmp = new bool[16];
+            tmp[0] = !(i % 2 == 0); i /= 2;
+            tmp[1] = !(i % 2 == 0); i /= 2;
+            tmp[2] = !(i % 2 == 0); i /= 2;
+            tmp[3] = !(i % 2 == 0); i /= 2;
+            tmp[4] = !(i % 2 == 0); i /= 2;
+            tmp[5] = !(i % 2 == 0); i /= 2;
+            tmp[6] = !(i % 2 == 0); i /= 2;
+            tmp[7] = !(i % 2 == 0); i /= 2;
+            tmp[8] = !(i % 2 == 0); i /= 2;
+            tmp[9] = !(i % 2 == 0); i /= 2;
+            tmp[10] = !(i % 2 == 0); i /= 2;
+            tmp[11] = !(i % 2 == 0); i /= 2;
+            tmp[12] = !(i % 2 == 0); i /= 2;
+            tmp[13] = !(i % 2 == 0); i /= 2;
+            tmp[14] = !(i % 2 == 0); i /= 2;
+            tmp[15] = !(i % 2 == 0);
+            for (int n = 15; n > -1; n--)
+                DecodedList.Add(tmp[n]);
         }
 
         private string Compress()
@@ -313,9 +495,14 @@ namespace Text_Compression
         private void Encoding()
         {
             Helper();
-            double low = 0.0;
-            double high = 1;
-            double range;
+            BigInteger low = new BigInteger(0);
+            BigInteger ten_power_1000 = new BigInteger(1);
+            for (int i = 0; i < 1000; i++)
+                ten_power_1000 = ten_power_1000 * 10;
+            BigInteger high = new BigInteger(1);
+            for (int i = 0; i < 1000; i++)
+                high = high * 10;
+            BigInteger range;
             foreach (var i in EncodedText)
             {
                 string tmp = i.ToString();
@@ -323,25 +510,26 @@ namespace Text_Compression
                 foreach (var j in r)
                 {
                     range = high - low;
-                    high = low + range * highs[j - 48];
-                    low = low + range * lows[j - 48];
+                    high = low + (range * highs[j - 48] / ten_power_1000);
+                    low = low + (range * lows[j - 48] / ten_power_1000);
                 }
                 //*
                 range = high - low;
-                high = low + range * highs[10];
-                low = low + range * lows[10];
+                high = low + (range * highs[10] / ten_power_1000);
+                low = low + (range * lows[10] / ten_power_1000);
             }
             result = low;
-
         }
 
         private void Helper()
         {
-            double high = 1;
-            prop = new double[11];
-            lows = new double[11];
-            highs = new double[11];
-
+            BigInteger high = new BigInteger(1);
+            for (int i = 0; i < 1000; i++)
+                high = high * 10;
+            prop = new BigInteger[11];
+            freq = new long[11];
+            lows = new BigInteger[11];
+            highs = new BigInteger[11];
             foreach (var i in EncodedText)
             {
                 string tmp = i.ToString();
@@ -349,30 +537,35 @@ namespace Text_Compression
                 foreach (var j in r)
                 {
                     if (j.Equals('0'))
-                        prop[0]++;
+                        freq[0]++;
                     else if (j.Equals('1'))
-                        prop[1]++;
+                        freq[1]++;
                     else if (j.Equals('2'))
-                        prop[2]++;
+                        freq[2]++;
                     else if (j.Equals('3'))
-                        prop[3]++;
+                        freq[3]++;
                     else if (j.Equals('4'))
-                        prop[4]++;
+                        freq[4]++;
                     else if (j.Equals('5'))
-                        prop[5]++;
+                        freq[5]++;
                     else if (j.Equals('6'))
-                        prop[6]++;
+                        freq[6]++;
                     else if (j.Equals('7'))
-                        prop[7]++;
+                        freq[7]++;
                     else if (j.Equals('8'))
-                        prop[8]++;
+                        freq[8]++;
                     else if (j.Equals('9'))
-                        prop[9]++;
+                        freq[9]++;
                     numbers++;
                 }
                 numbers++;
-                prop[10]++;
+                freq[10]++;
             }
+            BigInteger ten_power_1000 = new BigInteger(1);
+            for (int i = 0; i < 1000; i++)
+                ten_power_1000 = ten_power_1000 * 10;
+            for (int i = 0; i < 11; i++)
+                prop[i] = ten_power_1000 * freq[i];
             for (int i = 0; i < 11; i++)
                 prop[i] = prop[i] / numbers;
             for (int i = 0; i < 11; i++)
@@ -386,27 +579,32 @@ namespace Text_Compression
         private void Decoder()
         {
             EncodedByte = new List<char>();
-            double range;
+            BigInteger range = new BigInteger(0);
             char symbol;
-            double number = result;
-            while (number > 0 && number < 1)
+            BigInteger number = result;
+            BigInteger ten_power_1000 = new BigInteger(1);
+            for (int i = 0; i < 1000; i++)
+                ten_power_1000 = ten_power_1000 * 10;
+            long jj = 0;
+            while (/*number < ten_power_1000 && number > 0*/jj < numbers)
             {
                 symbol = Find_Sumbol(number);
                 EncodedByte.Add(symbol);
                 if (symbol == 94)
                 {
                     range = highs[10] - lows[10];
-                    number = (number - lows[10]) / range;
+                    number = (number - lows[10]) * ten_power_1000 / range;
                 }
                 else
                 {
                     range = highs[symbol - 48] - lows[symbol - 48];
-                    number = (number - lows[symbol - 48]) / range;
+                    number = (number - lows[symbol - 48]) * ten_power_1000 / range;
                 }
+                jj++;
             }
         }
 
-        private char Find_Sumbol(double s)
+        private char Find_Sumbol(BigInteger s)
         {
             for (int i = 0; i < 10; i++)
                 if (s > lows[i])

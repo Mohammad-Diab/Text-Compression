@@ -8,7 +8,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace WpfApplication10.Properties
+namespace Text_Compression.Properties
 {
 
 

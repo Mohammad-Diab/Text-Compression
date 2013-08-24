@@ -6,7 +6,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
 
-namespace WpfApplication10
+namespace Text_Compression
 {
     /// <summary>
     /// Interaction logic for App.xaml
